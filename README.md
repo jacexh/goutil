@@ -1,2 +1,3 @@
 # goutil
-自用util包
+
+some useful utility functions
