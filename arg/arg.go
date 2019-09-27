@@ -53,6 +53,14 @@ func BindBoolVar(arg *bool, name, env string, value bool, usage string) {
 	bound.flagPtrMapper[name] = reflect.ValueOf(arg)
 }
 
+func BindFloatVar(arg *float64, name, env string, value float64, usage string) {
+	flag.Float64Var(arg, name, value, usage)
+
+	bound.flagValueMapper[name] = reflect.ValueOf(value)
+	bound.flagEnvMapper[name] = env
+	bound.flagPtrMapper[name] = reflect.ValueOf(arg)
+}
+
 func parseArg(argName string) {
 	var readFromFlag bool
 	var readFromEnv bool
@@ -87,6 +95,13 @@ func parseArg(argName string) {
 				panic(err)
 			}
 			ptr.Elem().Set(reflect.ValueOf(eb))
+
+		case reflect.Float64:
+			ef, err := strconv.ParseFloat(ev, 10)
+			if err != nil {
+				panic(err)
+			}
+			ptr.Elem().Set(reflect.ValueOf(ef))
 		}
 	}
 }

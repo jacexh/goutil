@@ -66,3 +66,28 @@ func TestReadFromFlagAndEnv_Bool(t *testing.T) {
 		t.Fatal(arg)
 	}
 }
+
+func TestReadFromFlagAndEnv_Float64(t *testing.T) {
+	var arg float64
+	BindFloatVar(&arg, "arg", "TestReadFromFlagAndEnv", 3.2, "test")
+	flag.Set("arg", "3.3")
+	os.Setenv("TestReadFromFlagAndEnv", "3.4")
+	Parse()
+
+	if arg != 3.4 {
+		t.Fatal(arg)
+	}
+}
+
+func TestReadFromFlagAndEnv_Float64_Mode0(t *testing.T) {
+	var arg float64
+	BindFloatVar(&arg, "arg", "TestReadFromFlagAndEnv", 3.2, "test")
+	flag.Set("arg", "3.3")
+	os.Setenv("TestReadFromFlagAndEnv", "3.4")
+	EnvFirst(false)
+	Parse()
+
+	if arg != 3.3 {
+		t.Fatal(arg)
+	}
+}
