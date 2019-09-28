@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"time"
 )
 
 var (
@@ -32,30 +33,51 @@ func EnvFirst(b bool) {
 func BindStringVar(arg *string, name, env, value, usage string) {
 	flag.StringVar(arg, name, value, usage)
 
-	bound.flagValueMapper[name] = reflect.ValueOf(value)
-	bound.flagEnvMapper[name] = env
-	bound.flagPtrMapper[name] = reflect.ValueOf(arg)
+	register(arg, name, env, value)
 }
 
 func BindIntVar(arg *int, name, env string, value int, usage string) {
 	flag.IntVar(arg, name, value, usage)
 
-	bound.flagValueMapper[name] = reflect.ValueOf(value)
-	bound.flagEnvMapper[name] = env
-	bound.flagPtrMapper[name] = reflect.ValueOf(arg)
+	register(arg, name, env, value)
 }
 
 func BindBoolVar(arg *bool, name, env string, value bool, usage string) {
 	flag.BoolVar(arg, name, value, usage)
 
-	bound.flagValueMapper[name] = reflect.ValueOf(value)
-	bound.flagEnvMapper[name] = env
-	bound.flagPtrMapper[name] = reflect.ValueOf(arg)
+	register(arg, name, env, value)
 }
 
-func BindFloatVar(arg *float64, name, env string, value float64, usage string) {
+func BindFloat64Var(arg *float64, name, env string, value float64, usage string) {
 	flag.Float64Var(arg, name, value, usage)
 
+	register(arg, name, env, value)
+}
+
+func BindDurationVar(arg *time.Duration, name, env string, value time.Duration, usage string) {
+	flag.DurationVar(arg, name, value, usage)
+
+	register(arg, name, env, value)
+}
+
+func BindInt64Var(arg *int64, name, env string, value int64, usage string) {
+	flag.Int64Var(arg, name, value, usage)
+
+	register(arg, name, env, value)
+}
+
+func BindUintVar(arg *uint, name, env string, value uint, usage string) {
+	flag.UintVar(arg, name, value, usage)
+	register(arg, name, env, value)
+}
+
+func BindUint64Var(arg *uint64, name, env string, value uint64, usage string) {
+	flag.Uint64Var(arg, name, value, usage)
+	register(arg, name, env, value)
+
+}
+
+func register(arg interface{}, name, env string, value interface{}) {
 	bound.flagValueMapper[name] = reflect.ValueOf(value)
 	bound.flagEnvMapper[name] = env
 	bound.flagPtrMapper[name] = reflect.ValueOf(arg)
@@ -97,11 +119,40 @@ func parseArg(argName string) {
 			ptr.Elem().Set(reflect.ValueOf(eb))
 
 		case reflect.Float64:
-			ef, err := strconv.ParseFloat(ev, 10)
+			ef, err := strconv.ParseFloat(ev, 64)
 			if err != nil {
 				panic(err)
 			}
 			ptr.Elem().Set(reflect.ValueOf(ef))
+
+		case reflect.Int64:
+			if _, ok := ptr.Elem().Interface().(time.Duration); ok {
+				duration, err := time.ParseDuration(ev)
+				if err != nil {
+					panic(err)
+				}
+				ptr.Elem().Set(reflect.ValueOf(duration))
+				return
+			}
+			ei, err := strconv.ParseInt(ev, 10, 64)
+			if err != nil {
+				panic(err)
+			}
+			ptr.Elem().Set(reflect.ValueOf(ei))
+
+		case reflect.Uint:
+			eu, err := strconv.ParseUint(ev, 10, 32)
+			if err != nil {
+				panic(err)
+			}
+			ptr.Elem().Set(reflect.ValueOf(uint(eu)))
+
+		case reflect.Uint64:
+			eu, err := strconv.ParseUint(ev, 10, 64)
+			if err != nil {
+				panic(err)
+			}
+			ptr.Elem().Set(reflect.ValueOf(eu))
 		}
 	}
 }
@@ -112,4 +163,8 @@ func Parse() {
 	for key := range bound.flagEnvMapper {
 		parseArg(key)
 	}
+}
+
+func Parsed() bool {
+	return flag.Parsed()
 }

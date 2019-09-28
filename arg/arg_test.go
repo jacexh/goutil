@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestParse(t *testing.T) {
@@ -69,7 +70,7 @@ func TestReadFromFlagAndEnv_Bool(t *testing.T) {
 
 func TestReadFromFlagAndEnv_Float64(t *testing.T) {
 	var arg float64
-	BindFloatVar(&arg, "arg", "TestReadFromFlagAndEnv", 3.2, "test")
+	BindFloat64Var(&arg, "arg", "TestReadFromFlagAndEnv", 3.2, "test")
 	flag.Set("arg", "3.3")
 	os.Setenv("TestReadFromFlagAndEnv", "3.4")
 	Parse()
@@ -81,7 +82,7 @@ func TestReadFromFlagAndEnv_Float64(t *testing.T) {
 
 func TestReadFromFlagAndEnv_Float64_Mode0(t *testing.T) {
 	var arg float64
-	BindFloatVar(&arg, "arg", "TestReadFromFlagAndEnv", 3.2, "test")
+	BindFloat64Var(&arg, "arg", "TestReadFromFlagAndEnv", 3.2, "test")
 	flag.Set("arg", "3.3")
 	os.Setenv("TestReadFromFlagAndEnv", "3.4")
 	EnvFirst(false)
@@ -90,4 +91,24 @@ func TestReadFromFlagAndEnv_Float64_Mode0(t *testing.T) {
 	if arg != 3.3 {
 		t.Fatal(arg)
 	}
+}
+
+func TestReadFromFlagAndEnv_Duration(t *testing.T) {
+	var arg time.Duration
+	BindDurationVar(&arg, "arg", "TestReadFromFlagAndEnv", 1*time.Minute, "test")
+	flag.Set("arg", "2")
+	os.Setenv("TestReadFromFlagAndEnv", "3h")
+	Parse()
+
+	fmt.Println(arg.String())
+}
+
+func TestReadFromFlagAndEnv_Int64(t *testing.T) {
+	var arg int64
+	BindInt64Var(&arg, "arg", "TestReadFromFlagAndEnv", 0, "test")
+	flag.Set("arg", "1")
+	os.Setenv("TestReadFromFlagAndEnv", "2")
+	Parse()
+
+	fmt.Println(arg)
 }
