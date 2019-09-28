@@ -78,6 +78,9 @@ func BindUint64Var(arg *uint64, name, env string, value uint64, usage string) {
 }
 
 func register(arg interface{}, name, env string, value interface{}) {
+	if env == "" {
+		panic("disallow blank environment variable name")
+	}
 	bound.flagValueMapper[name] = reflect.ValueOf(value)
 	bound.flagEnvMapper[name] = env
 	bound.flagPtrMapper[name] = reflect.ValueOf(arg)
@@ -94,10 +97,8 @@ func parseArg(argName string) {
 		readFromFlag = true
 	}
 
-	ev := os.Getenv(bound.flagEnvMapper[argName])
-	if ev != "" {
-		readFromEnv = true
-	}
+	var ev string
+	ev, readFromEnv = os.LookupEnv(bound.flagEnvMapper[argName])
 
 	if (readFromFlag && readFromEnv && mode == 1) || (readFromEnv && !readFromFlag) { // 同时传入，根据优先级赋值
 		switch dv.Kind() {
