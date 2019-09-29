@@ -112,3 +112,9 @@ func TestReadFromFlagAndEnv_Int64(t *testing.T) {
 
 	fmt.Println(arg)
 }
+
+func TestConvertFlagName(t *testing.T) {
+	SetEnvPrefix("foo")
+	p := convertFlagNameToEnvName("project_id", "_")
+	fmt.Println(p)
+}

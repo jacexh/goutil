@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -20,6 +21,11 @@ var (
 	}
 
 	mode = 1 // 0: flag优先；1 ENV优先
+
+	envPrefix = ""
+
+	// DefaultSplitFlag
+	DefaultSplitFlag = "-"
 )
 
 func EnvFirst(b bool) {
@@ -36,10 +42,22 @@ func BindStringVar(arg *string, name, env, value, usage string) {
 	register(arg, name, env, value)
 }
 
+func BindStringVarWithSmartEnvName(arg *string, name, value, usage string) string {
+	env := convertFlagNameToEnvName(name, DefaultSplitFlag)
+	BindStringVar(arg, name, env, value, usage)
+	return env
+}
+
 func BindIntVar(arg *int, name, env string, value int, usage string) {
 	flag.IntVar(arg, name, value, usage)
 
 	register(arg, name, env, value)
+}
+
+func BindIntVarWithSmartEnvName(arg *int, name string, value int, usage string) string {
+	env := convertFlagNameToEnvName(name, DefaultSplitFlag)
+	BindIntVar(arg, name, env, value, usage)
+	return env
 }
 
 func BindBoolVar(arg *bool, name, env string, value bool, usage string) {
@@ -48,10 +66,22 @@ func BindBoolVar(arg *bool, name, env string, value bool, usage string) {
 	register(arg, name, env, value)
 }
 
+func BindBoolVarWithSmartEnvName(arg *bool, name string, value bool, usage string) string {
+	env := convertFlagNameToEnvName(name, DefaultSplitFlag)
+	BindBoolVar(arg, name, env, value, usage)
+	return env
+}
+
 func BindFloat64Var(arg *float64, name, env string, value float64, usage string) {
 	flag.Float64Var(arg, name, value, usage)
 
 	register(arg, name, env, value)
+}
+
+func BindFloat64VarWithSmartEnvName(arg *float64, name string, value float64, usage string) string {
+	env := convertFlagNameToEnvName(name, DefaultSplitFlag)
+	BindFloat64Var(arg, name, env, value, usage)
+	return env
 }
 
 func BindDurationVar(arg *time.Duration, name, env string, value time.Duration, usage string) {
@@ -60,10 +90,22 @@ func BindDurationVar(arg *time.Duration, name, env string, value time.Duration, 
 	register(arg, name, env, value)
 }
 
+func BindDurationVarWithSmartEnvName(arg *time.Duration, name string, value time.Duration, usage string) string {
+	env := convertFlagNameToEnvName(name, DefaultSplitFlag)
+	BindDurationVar(arg, name, env, value, usage)
+	return env
+}
+
 func BindInt64Var(arg *int64, name, env string, value int64, usage string) {
 	flag.Int64Var(arg, name, value, usage)
 
 	register(arg, name, env, value)
+}
+
+func BindInt64VarWithSmartEnvName(arg *int64, name string, value int64, usage string) string {
+	env := convertFlagNameToEnvName(name, DefaultSplitFlag)
+	BindInt64Var(arg, name, env, value, usage)
+	return env
 }
 
 func BindUintVar(arg *uint, name, env string, value uint, usage string) {
@@ -71,10 +113,22 @@ func BindUintVar(arg *uint, name, env string, value uint, usage string) {
 	register(arg, name, env, value)
 }
 
+func BindUintVarWithSmartEnvName(arg *uint, name string, value uint, usage string) string {
+	env := convertFlagNameToEnvName(name, DefaultSplitFlag)
+	BindUintVar(arg, name, env, value, usage)
+	return env
+}
+
 func BindUint64Var(arg *uint64, name, env string, value uint64, usage string) {
 	flag.Uint64Var(arg, name, value, usage)
 	register(arg, name, env, value)
 
+}
+
+func BindUint64VarWithSmartEnvName(arg *uint64, name string, value uint64, usage string) string {
+	env := convertFlagNameToEnvName(name, DefaultSplitFlag)
+	BindUint64Var(arg, name, env, value, usage)
+	return env
 }
 
 func register(arg interface{}, name, env string, value interface{}) {
@@ -168,4 +222,19 @@ func Parse() {
 
 func Parsed() bool {
 	return flag.Parsed()
+}
+
+func SetEnvPrefix(pre string) {
+	envPrefix = pre
+}
+
+func convertFlagNameToEnvName(f, sep string) string {
+	var subs []string
+	if envPrefix != "" {
+		subs = append(subs, strings.ToUpper(envPrefix))
+	}
+	for _, sub := range strings.Split(f, sep) {
+		subs = append(subs, strings.ToUpper(sub))
+	}
+	return strings.Join(subs, "_")
 }
