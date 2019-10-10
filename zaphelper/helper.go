@@ -1,7 +1,6 @@
 package zaphelper
 
 import (
-	"errors"
 	"sort"
 	"time"
 
@@ -89,8 +88,16 @@ func buildOptionsFromConfig(cfg zap.Config, writer zapcore.WriteSyncer) []zap.Op
 
 // BuildRotateLogger 基于zap.Config以及HelperConfig构建日志
 func BuildRotateLogger(conf zap.Config, hc HelperConfig, opts ...zap.Option) *zap.Logger {
-	if hc.Filename == "" {
-		panic(errors.New("no file path provided"))
+	var logger *zap.Logger
+	var err error
+
+	if hc.Filename == "" { // 如果不传入文件路径，则视为输出到控制台，不会读取 zap.Config.OutputPaths中的路径
+		logger, err = conf.Build(opts...)
+		if err != nil {
+			panic(err)
+		}
+		logger = logger.Named(hc.LoggerName)
+		return logger
 	}
 
 	writer := zapcore.AddSync(&lumberjack.Logger{
@@ -109,7 +116,7 @@ func BuildRotateLogger(conf zap.Config, hc HelperConfig, opts ...zap.Option) *za
 		core = zapcore.NewCore(zapcore.NewConsoleEncoder(conf.EncoderConfig), writer, conf.Level)
 	}
 
-	logger := zap.New(core, buildOptionsFromConfig(conf, writer)...)
+	logger = zap.New(core, buildOptionsFromConfig(conf, writer)...)
 	if hc.LoggerName != "" {
 		logger = logger.Named(hc.LoggerName)
 	}
