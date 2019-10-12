@@ -9,7 +9,7 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-type HelperConfig struct {
+type RotatingFileConfig struct {
 	// LoggerName 生成的Logger名称
 	LoggerName string
 
@@ -85,26 +85,26 @@ func buildOptionsFromConfig(cfg zap.Config, writer zapcore.WriteSyncer) []zap.Op
 }
 
 // BuildRotateLogger 基于zap.Config以及HelperConfig构建日志
-func BuildRotateLogger(conf zap.Config, hc HelperConfig, opts ...zap.Option) *zap.Logger {
+func BuildRotateLogger(conf zap.Config, rfc RotatingFileConfig, opts ...zap.Option) *zap.Logger {
 	var logger *zap.Logger
 	var err error
 
-	if hc.Filename == "" { // 如果不传入文件路径，则视为输出到控制台，不会读取 zap.Config.OutputPaths中的路径
+	if rfc.Filename == "" { // 如果不传入文件路径，则视为输出到控制台，不会读取 zap.Config.OutputPaths中的路径
 		logger, err = conf.Build(opts...)
 		if err != nil {
 			panic(err)
 		}
-		logger = logger.Named(hc.LoggerName)
+		logger = logger.Named(rfc.LoggerName)
 		return logger
 	}
 
 	writer := zapcore.AddSync(&lumberjack.Logger{
-		Filename:   hc.Filename,
-		MaxSize:    hc.MaxSize,
-		MaxAge:     hc.MaxAge,
-		MaxBackups: hc.MaxBackups,
-		LocalTime:  hc.LocalTime,
-		Compress:   hc.Compress,
+		Filename:   rfc.Filename,
+		MaxSize:    rfc.MaxSize,
+		MaxAge:     rfc.MaxAge,
+		MaxBackups: rfc.MaxBackups,
+		LocalTime:  rfc.LocalTime,
+		Compress:   rfc.Compress,
 	})
 
 	var core zapcore.Core
@@ -115,8 +115,8 @@ func BuildRotateLogger(conf zap.Config, hc HelperConfig, opts ...zap.Option) *za
 	}
 
 	logger = zap.New(core, buildOptionsFromConfig(conf, writer)...)
-	if hc.LoggerName != "" {
-		logger = logger.Named(hc.LoggerName)
+	if rfc.LoggerName != "" {
+		logger = logger.Named(rfc.LoggerName)
 	}
 	if len(opts) > 0 {
 		logger = logger.WithOptions(opts...)

@@ -25,7 +25,7 @@ func TestBuildRotateLogger(t *testing.T) {
 	conf.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	conf.EncoderConfig.TimeKey = "timestamp"
 	conf.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
-	hc := HelperConfig{
+	hc := RotatingFileConfig{
 		Filename: logPath,
 	}
 
